@@ -99,7 +99,7 @@ def query(address, county,neighborhood,City,State,zip_code):
     
     headers = {
                 "X-RapidAPI-Host": "zillow-com1.p.rapidapi.com",
-                "X-RapidAPI-Key": "<Enter X-RapidAPI-Key here" #X-RapidAPI Key
+                "X-RapidAPI-Key": "<Enter X-RapidAPI-Key here>" #X-RapidAPI Key
                 }
     
     response = requests.request("GET", RURL, headers=headers, params=querystring)
