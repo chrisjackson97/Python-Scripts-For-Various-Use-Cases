@@ -1,0 +1,155 @@
+#!/usr/bin/env python
+# coding: utf-8
+"""
+Created on Thu Jan 18 01:02:49 2024
+
+@author: Christopher M. Jackson
+"""
+
+
+""" The purpose of this script is to utilize Zillow API and RapidAPI calls to 
+mass query search results as shown on Zillow matching search requirements
+as defined on lines 34-39, and 97. The outputs of property attributes are on lines 115-128.
+Code functional with Jupyter Notebook(Anaconda 3) for output display. 
+NOTE: You will need your Zillow API Key for script to function(Line 21) as well as X-RapidAPI Key(Line 102)
+Note: For results, after running script, go to a new cell and either use dfa.head() or print(response.text) if needing raw output from script"""
+
+import requests
+import json 
+from bs4 import BeautifulSoup
+
+zwsid = '<Enter Zillow API Key Here>' #Zillow API Key
+ZURL = 'http://www.zillow.com/webservice/ProReviews.htm?zws-id=&screenname='#This is the Zillow URL for Zillow API Call
+RURL = "https://zillow-com1.p.rapidapi.com/propertyExtendedSearch"#URL for Zillow API via Rapid API with more Get Request options
+
+
+# -*- coding: utf-8 -*-
+"""
+This function operates with the Zillow API and RAPID API where we will call 
+out necessary parameters to utilize advanced search feature via the query
+"""
+"""Initialization variables and parameters to be passed within function and 
+loop statements. This script will always need at minimum both City and State"""
+
+address = '' # Please enter address
+county = ''     #Please enter county
+neighborhood = ''    #Please enter neighborhood
+City = 'Houston'     #Please Enter City
+State  = 'Texas'  #Please Enter State
+zip_code = ''#Please Enter Zip Code
+
+
+def query(address, county,neighborhood,City,State,zip_code):
+    file = '../Zillow and Rapid API to be used for Business Plan/Query Filtered'
+    address = address #address
+    county = county     #county
+    neighborhood = neighborhood   #neighborhood
+    City = City     #City
+    State  = State  #State
+    zip_code = zip_code #Zip Code
+    location = ''
+    
+    w1 = ''
+    w2 = ''
+    w3 = ''
+    w4 = ''
+    w5 = ''
+    w6 = ''
+    """This section of the code will break down all entered text  to evaluate if 
+    there were actual string characters placed within parameters of function or not
+    before splicing individual sections for to place comma delimeters for the API"""
+    
+    for word in range(1):
+        for good in (address[:len(address)],county[:len(county)],neighborhood[:len(neighborhood)],
+                     City[:len(City)],State[:len(State)],zip_code[:len(zip_code)]):
+            if len(good)>0:
+                location = location + good
+                for words in location[:len(location)]:
+                    if len(location)>(len(address) or len(county) or len(neighborhood) 
+                                     or len(City) or len(State) or len(zip_code)):
+                       
+                        for splice in range(1):
+                            w1 = location[:len(address)]
+                            w2 = location[len(address):len(address+county)]
+                            w3 = location[len(address+county):len(address+county+neighborhood)]
+                            w4 = location[len(address+county+neighborhood):len(address+county+neighborhood+City)]
+                            w5 = location[len(address+county+neighborhood+City):len(address+county+neighborhood+City+State)]
+                            w6 = location[len(address+county+neighborhood+City+State):len(address+county+neighborhood+City+State+zip_code)]
+                               
+    """Creating a empty string variable called "new" that will concatenate with previous
+    "location" string variable within code that places the results after filtering out 
+    empty parameters entered into a string list. Last step shown below is to place 
+    comma delimeters after each listed parameter for the query for Zillow API."""                       
+    
+    new = ''
+    for commas in range(1):
+        for comma in w1,w2,w3,w4,w5,w6:
+           if len(comma) > 0:
+               comma += ','
+               location = comma
+               new = new+location
+        new = new[:len(new)-1]
+        
+        if w1 == '' and w2 == '' and w3 == '' and w4 =='' and w5=='' and w6 == '': 
+            print('Please enter in atleast two criteria for parameters')
+    
+    location = query(address, county, neighborhood, City, State, zip_code)
+    house_type = "Multi-family" #Enter the house type(Multi-family, Apartments, Houses, Manufactured, Condos, LotsLand,Townhomes)
+    querystring = {"location":location,"home_type":house_type}
+    
+    headers = {
+                "X-RapidAPI-Host": "zillow-com1.p.rapidapi.com",
+                "X-RapidAPI-Key": "<Enter X-RapidAPI-Key here" #X-RapidAPI Key
+                }
+    
+    response = requests.request("GET", RURL, headers=headers, params=querystring)
+
+    import pandas as pd
+    print(response.text)
+#------------------------------------------------------------------------------
+    import json
+    import pandas as pd
+    file = response.text
+    file_payload = json.loads(file)
+    
+    props = file_payload.get('props')
+    new_list = [] #Initializing empty arry to place results of props json response into
+    for i in range(len(props)):
+            price= props[i].get('price')
+            property_type = props[i].get('propertyType')
+            address = props[i].get('address')
+            bedrooms = props[i].get('bedrooms')
+            bathrooms = props[i].get('bathrooms')
+            listing_status = props[i].get('listingStatus')
+            daysOnZillow = props[i].get('daysOnZillow')
+            zpid = props[i].get('zpid')
+            livingArea = props[i].get('livingArea')
+            list = [address,price, property_type,listing_status,bedrooms, bathrooms,daysOnZillow, zpid, livingArea]
+            new_list += list
+    
+    for col in range(1):
+            a_col = new_list[0:len(new_list):9]
+            b_col = new_list[1:len(new_list):9]
+            c_col = new_list[2:len(new_list):9]
+            d_col = new_list[3:len(new_list):9]
+            e_col = new_list[4:len(new_list):9]
+            f_col = new_list[5:len(new_list):9]
+            g_col = new_list[6:len(new_list):9]
+            h_col = new_list[7:len(new_list):9]
+            i_col = new_list[8:len(new_list):9]
+        
+    dfa = pd.DataFrame(a_col, columns = ["Address"]) 
+    dfb = pd.DataFrame(b_col, columns = ["Price($USD)"])
+    dfc =pd.DataFrame(c_col, columns = ["Property Type"])
+    dfd= pd.DataFrame(d_col, columns = ["Listing Status"])
+    dfe= pd.DataFrame(e_col, columns = ["Bedrooms"])
+    dff= pd.DataFrame(f_col, columns = ["Bathrooms"])
+    dfg= pd.DataFrame(g_col, columns = ["Days on Zillow"])
+    dfh= pd.DataFrame(h_col, columns = ["ZPID"])
+    dfi= pd.DataFrame(i_col, columns = ["Living Area(SqFt)"])
+    
+    dfa = dfa.join([dfb,dfc,dfd,dfi,dfe,dff,dfh]) #All columns of final output result joined
+    dfa.head(50)
+    #print(a_col)
+
+    
